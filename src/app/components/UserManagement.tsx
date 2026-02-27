@@ -4,7 +4,8 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Shield, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
+import { supabase } from "../utils/supabase";
+import { projectId } from "/utils/supabase/info";
 
 interface User {
   id: string;
@@ -16,10 +17,14 @@ interface User {
 
 interface UserManagementProps {
   currentUserId?: string;
-  accessToken: string;
 }
 
-export function UserManagement({ currentUserId, accessToken }: UserManagementProps) {
+const getAccessToken = async (): Promise<string> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || '';
+};
+
+export function UserManagement({ currentUserId }: UserManagementProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,11 +35,12 @@ export function UserManagement({ currentUserId, accessToken }: UserManagementPro
   const loadUsers = async () => {
     try {
       setLoading(true);
+      const token = await getAccessToken();
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-8ca89582/users`,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -55,12 +61,13 @@ export function UserManagement({ currentUserId, accessToken }: UserManagementPro
 
   const handleRoleChange = async (userId: string, newRole: string, userName: string) => {
     try {
+      const token = await getAccessToken();
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-8ca89582/users/${userId}/role`,
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ role: newRole }),
@@ -112,7 +119,7 @@ export function UserManagement({ currentUserId, accessToken }: UserManagementPro
                   <CardDescription>{user.email}</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge 
+                  <Badge
                     variant={user.role === 'admin' ? 'default' : 'secondary'}
                     className="flex items-center gap-1"
                   >

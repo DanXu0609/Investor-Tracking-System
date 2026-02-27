@@ -1,13 +1,18 @@
 import { Investor, EB5_STAGES_TEMPLATE } from "../types/investor";
-import { apiUrl } from "./supabase";
+import { supabase, apiUrl } from "./supabase";
 
 const STORAGE_KEY = "eb5_investors";
 
+// Always get a fresh token from the Supabase session (auto-refreshed)
+const getAccessToken = async (): Promise<string | undefined> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token;
+};
+
 export const investorStorage = {
-  // Get all investors - checks for backend access token first, falls back to localStorage
-  getAll: async (accessToken?: string): Promise<Investor[]> => {
+  getAll: async (): Promise<Investor[]> => {
+    const accessToken = await getAccessToken();
     if (accessToken) {
-      // Use backend if authenticated
       try {
         const response = await fetch(`${apiUrl}/investors`, {
           headers: {
@@ -20,13 +25,7 @@ export const investorStorage = {
           return data.investors || [];
         } else {
           const errorText = await response.text();
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-          } catch {
-            errorData = errorText;
-          }
-          console.error('Failed to fetch investors from backend:', errorData);
+          console.error('Failed to fetch investors from backend:', errorText);
           return [];
         }
       } catch (err) {
@@ -34,7 +33,6 @@ export const investorStorage = {
         return [];
       }
     } else {
-      // Fallback to localStorage for unauthenticated use
       try {
         const data = localStorage.getItem(STORAGE_KEY);
         return data ? JSON.parse(data) : getDefaultInvestors();
@@ -44,10 +42,9 @@ export const investorStorage = {
     }
   },
 
-  // Save all investors
-  save: async (investors: Investor[], accessToken?: string): Promise<void> => {
+  save: async (investors: Investor[]): Promise<void> => {
+    const accessToken = await getAccessToken();
     if (accessToken) {
-      // Save to backend if authenticated
       const response = await fetch(`${apiUrl}/investors`, {
         method: "POST",
         headers: {
@@ -63,29 +60,28 @@ export const investorStorage = {
         throw new Error(`Failed to save investors: ${errorText}`);
       }
     } else {
-      // Fallback to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(investors));
     }
   },
 
-  add: async (investor: Investor, accessToken?: string): Promise<void> => {
-    const investors = await investorStorage.getAll(accessToken);
+  add: async (investor: Investor): Promise<void> => {
+    const investors = await investorStorage.getAll();
     investors.push(investor);
-    await investorStorage.save(investors, accessToken);
+    await investorStorage.save(investors);
   },
 
-  update: async (id: string, updates: Partial<Investor>, accessToken?: string): Promise<void> => {
-    const investors = await investorStorage.getAll(accessToken);
+  update: async (id: string, updates: Partial<Investor>): Promise<void> => {
+    const investors = await investorStorage.getAll();
     const index = investors.findIndex((inv) => inv.id === id);
     if (index !== -1) {
       investors[index] = { ...investors[index], ...updates };
-      await investorStorage.save(investors, accessToken);
+      await investorStorage.save(investors);
     }
   },
 
-  delete: async (id: string, accessToken?: string): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
+    const accessToken = await getAccessToken();
     if (accessToken) {
-      // Delete from backend if authenticated
       const response = await fetch(`${apiUrl}/investors/${id}`, {
         method: "DELETE",
         headers: {
@@ -99,7 +95,6 @@ export const investorStorage = {
         throw new Error(`Failed to delete investor: ${errorText}`);
       }
     } else {
-      // Delete from localStorage
       const investors = await investorStorage.getAll();
       const filtered = investors.filter((inv) => inv.id !== id);
       await investorStorage.save(filtered);

@@ -68,7 +68,7 @@ export default function App() {
   }, [isAuthenticated, accessToken]);
 
   const loadInvestors = async () => {
-    const loadedInvestors = await investorStorage.getAll(accessToken || undefined);
+    const loadedInvestors = await investorStorage.getAll();
     setInvestors(loadedInvestors);
   };
 
@@ -92,7 +92,7 @@ export default function App() {
 
   const handleAddInvestor = async (investor: Investor) => {
     try {
-      await investorStorage.add(investor, accessToken || undefined);
+      await investorStorage.add(investor);
       setInvestors(prev => [...prev, investor]);
       toast.success(`${investor.name} has been added successfully`);
     } catch (err: any) {
@@ -103,7 +103,7 @@ export default function App() {
 
   const handleUpdateInvestor = async (id: string, updates: Partial<Investor>) => {
     try {
-      await investorStorage.update(id, updates, accessToken || undefined);
+      await investorStorage.update(id, updates);
       setInvestors(prev => prev.map(inv => inv.id === id ? { ...inv, ...updates } : inv));
 
       // Update selected investor if it's the one being updated
@@ -118,7 +118,7 @@ export default function App() {
 
   const handleDeleteInvestor = async (id: string) => {
     try {
-      await investorStorage.delete(id, accessToken || undefined);
+      await investorStorage.delete(id);
       setInvestors(prev => prev.filter(inv => inv.id !== id));
 
       // If the deleted investor was selected, go back to dashboard
@@ -282,7 +282,6 @@ export default function App() {
             <TabsContent value="users">
               <UserManagement
                 currentUserId={userId}
-                accessToken={accessToken || ''}
               />
             </TabsContent>
           )}
