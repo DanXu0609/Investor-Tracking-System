@@ -1,5 +1,6 @@
 import { Investor, EB5_STAGES_TEMPLATE } from "../types/investor";
 import { supabase, apiUrl } from "./supabase";
+import { publicAnonKey } from "/utils/supabase/info";
 
 const STORAGE_KEY = "eb5_investors";
 
@@ -16,6 +17,7 @@ export const investorStorage = {
       try {
         const response = await fetch(`${apiUrl}/investors`, {
           headers: {
+            "apikey": publicAnonKey,
             "Authorization": `Bearer ${accessToken}`,
           },
         });
@@ -49,6 +51,7 @@ export const investorStorage = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "apikey": publicAnonKey,
           "Authorization": `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ investors }),
@@ -85,6 +88,7 @@ export const investorStorage = {
       const response = await fetch(`${apiUrl}/investors/${id}`, {
         method: "DELETE",
         headers: {
+          "apikey": publicAnonKey,
           "Authorization": `Bearer ${accessToken}`,
         },
       });

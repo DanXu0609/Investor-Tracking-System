@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { Shield, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "../utils/supabase";
-import { projectId } from "/utils/supabase/info";
+import { projectId, publicAnonKey } from "/utils/supabase/info";
 
 interface User {
   id: string;
@@ -40,6 +40,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
         `https://${projectId}.supabase.co/functions/v1/make-server-8ca89582/users`,
         {
           headers: {
+            "apikey": publicAnonKey,
             Authorization: `Bearer ${token}`,
           },
         }
@@ -67,6 +68,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
         {
           method: "PUT",
           headers: {
+            "apikey": publicAnonKey,
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
