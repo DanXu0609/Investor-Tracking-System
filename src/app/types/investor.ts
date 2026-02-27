@@ -1,9 +1,12 @@
+export type StageStatus = "not_started" | "in_progress" | "completed";
+
 export interface EB5Stage {
   id: string;
   name: string;
   description: string;
   completed: boolean;
   completedDate?: string;
+  status?: StageStatus;
 }
 
 export interface Investor {

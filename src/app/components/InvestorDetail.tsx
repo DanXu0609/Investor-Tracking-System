@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Investor, EB5Stage } from "../types/investor";
+import { Investor, EB5Stage, StageStatus } from "../types/investor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
-import { ArrowLeft, CheckCircle2, Circle, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Clock, Pencil, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import { AddInvestorDialog } from "./AddInvestorDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface InvestorDetailProps {
   investor: Investor;
@@ -34,16 +35,7 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  const handleStageToggle = (stageIndex: number) => {
-    const newStages = [...localStages];
-    const stage = newStages[stageIndex];
-    
-    stage.completed = !stage.completed;
-    stage.completedDate = stage.completed 
-      ? new Date().toISOString().split('T')[0] 
-      : undefined;
-
-    // Update current stage index
+  const updateStagesAndSave = (newStages: EB5Stage[]) => {
     let newCurrentStageIndex = 0;
     for (let i = newStages.length - 1; i >= 0; i--) {
       if (newStages[i].completed) {
@@ -51,12 +43,39 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
         break;
       }
     }
-
     setLocalStages(newStages);
-    onUpdate(investor.id, { 
-      stages: newStages, 
-      currentStageIndex: newCurrentStageIndex 
-    });
+    onUpdate(investor.id, { stages: newStages, currentStageIndex: newCurrentStageIndex });
+  };
+
+  const handleStageToggle = (stageIndex: number) => {
+    const newStages = [...localStages];
+    const stage = { ...newStages[stageIndex] };
+
+    stage.completed = !stage.completed;
+    stage.completedDate = stage.completed
+      ? new Date().toISOString().split('T')[0]
+      : undefined;
+    stage.status = stage.completed ? "completed" : "not_started";
+
+    newStages[stageIndex] = stage;
+    updateStagesAndSave(newStages);
+  };
+
+  const handleStageStatusChange = (stageIndex: number, status: StageStatus) => {
+    const newStages = [...localStages];
+    const stage = { ...newStages[stageIndex] };
+
+    stage.status = status;
+    if (status === "completed") {
+      stage.completed = true;
+      stage.completedDate = stage.completedDate || new Date().toISOString().split('T')[0];
+    } else {
+      stage.completed = false;
+      stage.completedDate = undefined;
+    }
+
+    newStages[stageIndex] = stage;
+    updateStagesAndSave(newStages);
   };
 
   const handleSaveNotes = () => {
@@ -157,6 +176,7 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
                   stage={stage}
                   index={index}
                   onToggle={() => handleStageToggle(index)}
+                  onStatusChange={(status) => handleStageStatusChange(index, status)}
                   disabled={!isAdmin}
                 />
               ))}
@@ -226,19 +246,29 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
   );
 }
 
+function getEffectiveStatus(stage: EB5Stage): StageStatus {
+  if (stage.status) return stage.status;
+  return stage.completed ? "completed" : "not_started";
+}
+
 interface StageItemProps {
   stage: EB5Stage;
   index: number;
   onToggle: () => void;
+  onStatusChange: (status: StageStatus) => void;
   disabled?: boolean;
 }
 
-function StageItem({ stage, index, onToggle, disabled = false }: StageItemProps) {
+function StageItem({ stage, index, onToggle, onStatusChange, disabled = false }: StageItemProps) {
+  const status = getEffectiveStatus(stage);
+
   return (
-    <div 
+    <div
       className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
-        stage.completed 
-          ? 'bg-primary/5 border-primary/20' 
+        status === 'completed'
+          ? 'bg-primary/5 border-primary/20'
+          : status === 'in_progress'
+          ? 'bg-yellow-500/5 border-yellow-500/20'
           : 'bg-background hover:bg-accent/50'
       }`}
     >
@@ -258,11 +288,14 @@ function StageItem({ stage, index, onToggle, disabled = false }: StageItemProps)
             <span className="text-xs font-medium text-muted-foreground">
               Step {index + 1}
             </span>
-            {stage.completed && (
+            {status === 'completed' && (
               <CheckCircle2 className="w-4 h-4 text-primary" />
             )}
+            {status === 'in_progress' && (
+              <Clock className="w-4 h-4 text-yellow-500" />
+            )}
           </div>
-          <p className={`font-medium ${stage.completed ? 'text-foreground' : 'text-foreground'}`}>
+          <p className="font-medium text-foreground">
             {stage.name}
           </p>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -275,6 +308,18 @@ function StageItem({ stage, index, onToggle, disabled = false }: StageItemProps)
           )}
         </label>
       </div>
+      {!disabled && (
+        <Select value={status} onValueChange={(v) => onStatusChange(v as StageStatus)}>
+          <SelectTrigger className="w-[130px] shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="not_started">Not Started</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

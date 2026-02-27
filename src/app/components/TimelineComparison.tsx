@@ -86,20 +86,20 @@ function InvestorTimelineRow({ investor }: { investor: Investor }) {
       </div>
       <div className="flex-1 grid grid-cols-11 gap-1">
         {investor.stages.map((stage, idx) => {
+          const status = stage.status || (stage.completed ? 'completed' : 'not_started');
           const isCurrent = idx === investor.currentStageIndex;
-          const isCompleted = stage.completed;
-          
+
           return (
             <div
               key={stage.id}
               className={`h-8 rounded transition-all ${
-                isCompleted 
-                  ? 'bg-primary' 
-                  : isCurrent 
-                  ? 'bg-yellow-500' 
+                status === 'completed'
+                  ? 'bg-primary'
+                  : status === 'in_progress' || isCurrent
+                  ? 'bg-yellow-500'
                   : 'bg-secondary'
               }`}
-              title={`${stage.name}${isCompleted ? ` - Completed ${stage.completedDate}` : ''}`}
+              title={`${stage.name}${stage.completed ? ` - Completed ${stage.completedDate}` : status === 'in_progress' ? ' - In Progress' : ''}`}
             />
           );
         })}
