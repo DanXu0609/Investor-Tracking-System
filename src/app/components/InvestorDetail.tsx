@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
-import { ArrowLeft, CheckCircle2, Circle, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, Pencil, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { AddInvestorDialog } from "./AddInvestorDialog";
 
 interface InvestorDetailProps {
   investor: Investor;
@@ -31,6 +32,7 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
   const [localStages, setLocalStages] = useState(investor.stages);
   const [notes, setNotes] = useState(investor.notes || "");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleStageToggle = (stageIndex: number) => {
     const newStages = [...localStages];
@@ -69,6 +71,11 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
     }
   };
 
+  const handleEditSave = (id: string, updates: Partial<Investor>) => {
+    onUpdate(id, updates);
+    toast.success("Investor updated successfully");
+  };
+
   const completedCount = localStages.filter(s => s.completed).length;
   const progress = (completedCount / localStages.length) * 100;
 
@@ -80,7 +87,14 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
           Back to Dashboard
         </Button>
         
-        {isAdmin && onDelete && (
+        {isAdmin && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Investor
+            </Button>
+
+            {onDelete && (
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -104,6 +118,8 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+            )}
+          </div>
         )}
       </div>
 
@@ -199,6 +215,13 @@ export function InvestorDetail({ investor, onBack, onUpdate, onDelete, isAdmin }
           </Card>
         </div>
       </div>
+
+      <AddInvestorDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        investor={investor}
+        onUpdate={handleEditSave}
+      />
     </div>
   );
 }

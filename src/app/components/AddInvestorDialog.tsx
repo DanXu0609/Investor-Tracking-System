@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -8,10 +8,14 @@ import { Investor, EB5_STAGES_TEMPLATE } from "../types/investor";
 interface AddInvestorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (investor: Investor) => void;
+  onAdd?: (investor: Investor) => void;
+  investor?: Investor;
+  onUpdate?: (id: string, updates: Partial<Investor>) => void;
 }
 
-export function AddInvestorDialog({ open, onOpenChange, onAdd }: AddInvestorDialogProps) {
+export function AddInvestorDialog({ open, onOpenChange, onAdd, investor, onUpdate }: AddInvestorDialogProps) {
+  const isEditMode = !!investor;
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,9 +23,33 @@ export function AddInvestorDialog({ open, onOpenChange, onAdd }: AddInvestorDial
     investmentAmount: "",
   });
 
+  useEffect(() => {
+    if (investor && open) {
+      setFormData({
+        name: investor.name,
+        email: investor.email,
+        country: investor.country,
+        investmentAmount: investor.investmentAmount.toString(),
+      });
+    } else if (!open) {
+      setFormData({ name: "", email: "", country: "", investmentAmount: "" });
+    }
+  }, [investor, open]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (isEditMode && onUpdate && investor) {
+      onUpdate(investor.id, {
+        name: formData.name,
+        email: formData.email,
+        country: formData.country,
+        investmentAmount: parseFloat(formData.investmentAmount),
+      });
+      onOpenChange(false);
+      return;
+    }
+
     const newInvestor: Investor = {
       id: Date.now().toString(),
       name: formData.name,
@@ -37,7 +65,7 @@ export function AddInvestorDialog({ open, onOpenChange, onAdd }: AddInvestorDial
       notes: "",
     };
 
-    onAdd(newInvestor);
+    onAdd?.(newInvestor);
     setFormData({ name: "", email: "", country: "", investmentAmount: "" });
     onOpenChange(false);
   };
@@ -46,9 +74,9 @@ export function AddInvestorDialog({ open, onOpenChange, onAdd }: AddInvestorDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Investor</DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Investor" : "Add New Investor"}</DialogTitle>
           <DialogDescription>
-            Enter the details of the new EB5 investor
+            {isEditMode ? "Update the investor's information" : "Enter the details of the new EB5 investor"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -102,7 +130,7 @@ export function AddInvestorDialog({ open, onOpenChange, onAdd }: AddInvestorDial
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Add Investor</Button>
+            <Button type="submit">{isEditMode ? "Save Changes" : "Add Investor"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
