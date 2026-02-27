@@ -268,13 +268,14 @@ app.get("/make-server-8ca89582/investors", async (c) => {
     console.log('GET /investors - User authenticated, searching with prefix:', `investor:${user.id}:`);
 
     // Get all investors for this user
-    const investors = await kv.getByPrefix(`investor:${user.id}:`);
-    
+    const investorsData = await kv.getByPrefix(`investor:${user.id}:`);
+    const investors = investorsData.map(item => item.value);
+
     console.log('GET /investors - Found investors:', {
       count: investors?.length || 0,
       firstInvestor: investors?.[0] ? JSON.stringify(investors[0]).substring(0, 100) : 'none'
     });
-    
+
     return c.json({ investors: investors || [] });
   } catch (err) {
     console.error('Get investors exception:', err);

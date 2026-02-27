@@ -76,12 +76,12 @@ export const mdel = async (keys: string[]): Promise<void> => {
   }
 };
 
-// Search for key-value pairs by prefix.
+// Search for key-value pairs by prefix. Returns {key, value} objects.
 export const getByPrefix = async (prefix: string): Promise<any[]> => {
   const supabase = client()
   const { data, error } = await supabase.from("kv_store_8ca89582").select("key, value").like("key", prefix + "%");
   if (error) {
     throw new Error(error.message);
   }
-  return data?.map((d) => d.value) ?? [];
+  return data ?? [];
 };
