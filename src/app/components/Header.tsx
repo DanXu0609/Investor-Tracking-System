@@ -15,7 +15,7 @@ export function Header({ userName, userRole, onLogout }: HeaderProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <img
-              src="/logo-dark.png"
+              src={`${import.meta.env.BASE_URL}logo-dark.png`}
               alt="Beyond International"
               className="h-12 w-auto object-contain"
             />

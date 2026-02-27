@@ -95,9 +95,9 @@ export default function App() {
       await investorStorage.add(investor, accessToken || undefined);
       setInvestors(prev => [...prev, investor]);
       toast.success(`${investor.name} has been added successfully`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding investor:', err);
-      toast.error(`Failed to add ${investor.name}. Please try again.`);
+      toast.error(`Failed to add ${investor.name}: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -110,9 +110,9 @@ export default function App() {
       if (selectedInvestor?.id === id) {
         setSelectedInvestor(prev => prev ? { ...prev, ...updates } : prev);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating investor:', err);
-      toast.error('Failed to update investor. Please try again.');
+      toast.error(`Failed to update investor: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -126,9 +126,9 @@ export default function App() {
         setSelectedInvestor(null);
         setActiveTab("dashboard");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting investor:', err);
-      toast.error('Failed to delete investor. Please try again.');
+      toast.error(`Failed to delete investor: ${err.message || 'Unknown error'}`);
     }
   };
 

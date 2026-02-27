@@ -130,7 +130,7 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img
-              src="/logo-dark.png"
+              src={`${import.meta.env.BASE_URL}logo-dark.png`}
               alt="Beyond International"
               className="h-16 w-auto object-contain"
             />
