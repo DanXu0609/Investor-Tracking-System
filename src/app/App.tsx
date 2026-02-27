@@ -142,9 +142,45 @@ export default function App() {
     setActiveTab("dashboard");
   };
 
-  const handleSaveStagesTemplate = (newTemplate: Omit<EB5Stage, "completed" | "completedDate">[]) => {
+  const handleSaveStagesTemplate = async (newTemplate: Omit<EB5Stage, "completed" | "completedDate">[]) => {
     setStagesTemplate(newTemplate);
     localStorage.setItem("stages_template", JSON.stringify(newTemplate));
+
+    // Sync template changes into all existing investors
+    if (investors.length > 0) {
+      const updatedInvestors = investors.map(inv => {
+        const newStages = newTemplate.map(tmpl => {
+          const existing = inv.stages.find(s => s.id === tmpl.id);
+          if (existing) {
+            return { ...existing, name: tmpl.name, description: tmpl.description };
+          }
+          return { ...tmpl, completed: false, completedDate: undefined, status: undefined as any };
+        });
+
+        let newCurrentStageIndex = 0;
+        for (let i = newStages.length - 1; i >= 0; i--) {
+          if (newStages[i].completed) {
+            newCurrentStageIndex = i;
+            break;
+          }
+        }
+
+        return { ...inv, stages: newStages, currentStageIndex: newCurrentStageIndex };
+      });
+
+      setInvestors(updatedInvestors);
+      if (selectedInvestor) {
+        const updated = updatedInvestors.find(inv => inv.id === selectedInvestor.id);
+        if (updated) setSelectedInvestor(updated);
+      }
+
+      try {
+        await investorStorage.save(updatedInvestors);
+      } catch (err: any) {
+        console.error('Error syncing stages to investors:', err);
+      }
+    }
+
     toast.success("Filing steps updated successfully");
   };
 
@@ -292,6 +328,7 @@ export default function App() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onAdd={handleAddInvestor}
+        stagesTemplate={stagesTemplate}
       />
 
       <StageSettingsDialog

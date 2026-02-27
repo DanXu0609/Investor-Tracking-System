@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Investor, EB5_STAGES_TEMPLATE } from "../types/investor";
+import { Investor, EB5Stage, EB5_STAGES_TEMPLATE } from "../types/investor";
 
 interface AddInvestorDialogProps {
   open: boolean;
@@ -11,9 +11,10 @@ interface AddInvestorDialogProps {
   onAdd?: (investor: Investor) => void;
   investor?: Investor;
   onUpdate?: (id: string, updates: Partial<Investor>) => void;
+  stagesTemplate?: Omit<EB5Stage, "completed" | "completedDate">[];
 }
 
-export function AddInvestorDialog({ open, onOpenChange, onAdd, investor, onUpdate }: AddInvestorDialogProps) {
+export function AddInvestorDialog({ open, onOpenChange, onAdd, investor, onUpdate, stagesTemplate }: AddInvestorDialogProps) {
   const isEditMode = !!investor;
 
   const [formData, setFormData] = useState({
@@ -58,7 +59,7 @@ export function AddInvestorDialog({ open, onOpenChange, onAdd, investor, onUpdat
       investmentAmount: parseFloat(formData.investmentAmount),
       dateAdded: new Date().toISOString().split('T')[0],
       currentStageIndex: 0,
-      stages: EB5_STAGES_TEMPLATE.map(stage => ({
+      stages: (stagesTemplate || EB5_STAGES_TEMPLATE).map(stage => ({
         ...stage,
         completed: false,
       })),
