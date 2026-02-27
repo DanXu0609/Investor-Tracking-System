@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -104,6 +104,12 @@ function DraggableStageCard({ stage, index, moveStage, onUpdate, onRemove }: Dra
 
 export function StageSettingsDialog({ open, onOpenChange, stages, onSave }: StageSettingsDialogProps) {
   const [localStages, setLocalStages] = useState(stages);
+
+  useEffect(() => {
+    if (open) {
+      setLocalStages(stages);
+    }
+  }, [open, stages]);
 
   const moveStage = useCallback((from: number, to: number) => {
     setLocalStages((prev) => {

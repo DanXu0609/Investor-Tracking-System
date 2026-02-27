@@ -18,7 +18,7 @@ export function TimelineComparison({ investors }: TimelineComparisonProps) {
       <CardContent>
         <div className="space-y-6">
           {/* Stage headers */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
             <div className="w-40 shrink-0" /> {/* Spacer for names */}
             <div className="flex-1 grid grid-cols-11 gap-1">
               {investors[0]?.stages.map((stage, idx) => (
@@ -33,6 +33,7 @@ export function TimelineComparison({ investors }: TimelineComparisonProps) {
                 </div>
               ))}
             </div>
+            <div className="w-16 shrink-0" /> {/* Spacer to match investor rows */}
           </div>
 
           {/* Investor rows */}
